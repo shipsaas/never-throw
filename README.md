@@ -1,5 +1,7 @@
 # NeverThrow - PHP Version
 
+[![Build & Test (PHP 8.1, 8.2)](https://github.com/shipsaas/never-throw/actions/workflows/build.yml/badge.svg)](https://github.com/shipsaas/never-throw/actions/workflows/build.yml)
+
 Inspired by [NeverThrow](https://github.com/supermacro/neverthrow) so here we are with a simple implementation of NeverThrow from PHP.
 
 See more [notes of NeverThrow](https://github.com/supermacro/neverthrow#a-note-on-the-package-name) on the whys.
