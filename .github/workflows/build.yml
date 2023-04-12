@@ -26,6 +26,11 @@ jobs:
                     php-version: ${{ matrix.version }}
                     coverage: pcov
 
+            -   name: Setup
+                if: success()
+                run: |
+                    composer install --no-interaction
+
             -   name: PHPUnit tests with coverage
                 if: success()
                 run: |
