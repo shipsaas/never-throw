@@ -1,5 +1,6 @@
 # NeverThrow - PHP Version
 
+[![codecov](https://codecov.io/gh/shipsaas/never-throw/branch/main/graph/badge.svg?token=P1E3WP84MG)](https://codecov.io/gh/shipsaas/never-throw)
 [![Build & Test (PHP 8.1, 8.2)](https://github.com/shipsaas/never-throw/actions/workflows/build.yml/badge.svg)](https://github.com/shipsaas/never-throw/actions/workflows/build.yml)
 
 Inspired by [NeverThrow](https://github.com/supermacro/neverthrow) so here we are with a simple implementation of NeverThrow from PHP.
