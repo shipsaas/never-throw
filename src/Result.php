@@ -8,7 +8,7 @@ abstract class Result
     protected readonly mixed $okResult;
     protected readonly mixed $errorResult;
 
-    public static function ok(mixed $okResult): self
+    public static function ok(mixed $okResult): static
     {
         $result = new static();
         $result->isOk = true;
@@ -17,7 +17,7 @@ abstract class Result
         return $result;
     }
 
-    public static function error(mixed $errorResult): self
+    public static function error(mixed $errorResult): static
     {
         $result = new static();
         $result->isOk = false;
