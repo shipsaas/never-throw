@@ -2,28 +2,17 @@
 
 namespace NeverThrow;
 
+use LogicException;
+
 abstract class Result
 {
     private bool $isOk;
-    protected readonly mixed $okResult;
-    protected readonly mixed $errorResult;
+    private SuccessResult|ErrorResult $result;
 
-    public static function ok(mixed $okResult): static
+    public function __construct(SuccessResult|ErrorResult $result)
     {
-        $result = new static();
-        $result->isOk = true;
-        $result->okResult = $okResult;
-
-        return $result;
-    }
-
-    public static function error(mixed $errorResult): static
-    {
-        $result = new static();
-        $result->isOk = false;
-        $result->errorResult = $errorResult;
-
-        return $result;
+        $this->isOk = $result->isOk();
+        $this->result = $result;
     }
 
     public function isOk(): bool
@@ -36,13 +25,27 @@ abstract class Result
         return !$this->isOk;
     }
 
-    public function getOkResult(): mixed
+    /**
+     * @throws LogicException
+     */
+    public function getOkResult(): SuccessResult
     {
-        return $this->okResult ?? null;
+        if ($this->isError()) {
+            throw new LogicException('Result is not OK');
+        }
+
+        return $this->result;
     }
 
-    public function getErrorResult(): mixed
+    /**
+     * @throws LogicException
+     */
+    public function getErrorResult(): ErrorResult
     {
-        return $this->errorResult ?? null;
+        if ($this->isOk()) {
+            throw new LogicException('Result is not ERROR');
+        }
+
+        return $this->result;
     }
 }

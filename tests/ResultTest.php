@@ -2,37 +2,52 @@
 
 namespace NeverThrow\Tests;
 
+use LogicException;
+use NeverThrow\ErrorResult;
 use NeverThrow\Result;
+use NeverThrow\SuccessResult;
 use PHPUnit\Framework\TestCase;
 
 class ResultTest extends TestCase
 {
     public function testOkResult()
     {
-        $okResult = TransferResult::ok(
-            $transferOkResult = new TransferOkResult('#999302')
-        );
+        $okResult = new TransferResult($transferOkResult = new TransferOkResult('#999302'));
 
         $this->assertTrue($okResult->isOk());
         $this->assertFalse($okResult->isError());
         $this->assertSame($transferOkResult, $okResult->getOkResult());
-        $this->assertNull($okResult->getErrorResult());
+    }
+
+    public function testOkResultGetErrorResultThrowsAnException()
+    {
+        $this->expectException(LogicException::class);
+
+        $okResult = new TransferResult(new TransferOkResult('#999302'));
+
+        $okResult->getErrorResult();
     }
 
     public function testErrorResult()
     {
-        $errorResult = TransferResult::error(
-            $transferErrorResult = new TransferErrorResult(TransferErrorOutcome::INSUFFICIENT_BALANCE)
-        );
+        $errorResult = new TransferResult($transferErrorResult = new TransferErrorResult(TransferErrorOutcome::INSUFFICIENT_BALANCE));
 
         $this->assertFalse($errorResult->isOk());
         $this->assertTrue($errorResult->isError());
         $this->assertSame($transferErrorResult, $errorResult->getErrorResult());
-        $this->assertNull($errorResult->getOkResult());
+    }
+
+    public function testErrorResultGetOkResultThrowsAnException()
+    {
+        $this->expectException(LogicException::class);
+
+        $result = new TransferResult(new TransferErrorResult(TransferErrorOutcome::INSUFFICIENT_BALANCE));
+
+        $result->getOkResult();
     }
 }
 
-class TransferOkResult
+class TransferOkResult extends SuccessResult
 {
     public function __construct(
         public string $transferId
@@ -46,7 +61,7 @@ enum TransferErrorOutcome
     case BENEFICIARY_INCORRECT;
 }
 
-class TransferErrorResult
+class TransferErrorResult extends ErrorResult
 {
     public function __construct(
         public TransferErrorOutcome $outcome
@@ -54,10 +69,15 @@ class TransferErrorResult
     }
 }
 
-/**
- * @method TransferOkResult getOkResult()
- * @method TransferErrorResult getErrorResult()()
- */
 class TransferResult extends Result
 {
+    public function getOkResult(): TransferOkResult
+    {
+        return parent::getOkResult();
+    }
+
+    public function getErrorResult(): TransferErrorResult
+    {
+        return parent::getErrorResult();
+    }
 }
