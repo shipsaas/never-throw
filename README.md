@@ -116,13 +116,13 @@ As you can see with the above code, there are:
 
 It would bring the development truly awesome and no pain. 
 
-With strictly typed return types, developers can know what is going on with other services/libraries. 
-Thus makes the reusable better.
-And we don't have to wrap the try/catch and uglify our code.
+With strictly typed return types, developers can know what is going on when using services/libraries (thus makes the reusable better).
 
-Don't abuse Exceptions, they should be only used for the unexpected situations (and Errors !== Exceptions, fact).
+And it makes us worry-free about wrapping things in try/catch blocks.
 
-(Optional: Exceptions are expensive, way more expensive than a simple Error response.)
+Let us don't abuse/overuse Exceptions, they should be only used for unexpected situations.
+
+(Additional thoughts: Exceptions are expensive, way more expensive than a simple Error response)
 
 ### Additional notes
 
