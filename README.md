@@ -35,9 +35,6 @@ You can use them immediately in your code, but we recommend to create your own S
 ### Create your success & error data classes
 
 ```php
-use NeverThrow\Ok;
-use NeverThrow\Err;
-
 class BookShipperOkData
 {
     public function __construct(
@@ -64,6 +61,10 @@ class BookShipperErrorData
 
 
 ```php
+use NeverThrow\Ok;
+use NeverThrow\Err;
+use NeverThrow\ResultInterface;
+
 /**
  * @return ResultInterface<BookShipperOkData, BookShipperErrorData>
  */
@@ -71,21 +72,17 @@ public function createBooking(User $user, BookingOrder $order): ResultInterface
 {
     $hasAnyShipperAvailable = $this->shipperService->hasAnyShipperAvailable();
     if (!$hasAnyShipperAvailable) {
-        new BookShipperErrorResult(
-            BookingErrors::NO_SHIPPER_AVAILABLE
-        );
+        return new Err(BookingErrors::NO_SHIPPER_AVAILABLE);
     }
     
     $isOverweight = !$this->weightService->isValid($order);
     if ($isOverweight) {
-        return new BookShipperErrorResult(
-            BookingErrors::OVERWEIGHT_PACKAGE
-        );
+        return new Err(BookingErrors::OVERWEIGHT_PACKAGE);
     }
     
     $booking = $this->book($user, $order);
    
-    return new BookShipperOkResult($booking);
+    return new Ok($booking);
 }
 ```
 
@@ -132,15 +129,15 @@ Don't abuse Exceptions, they should be only used for the unexpected situations (
 ```php
 function transfer(): Transaction
 {
-    if (!$hasEnoughBalance) {
+    if (!$this->hasEnoughBalance()) {
         throw new InsufficientBalanceError();
     }
     
-    if (!$invalidRecipient) {
+    if (!$this->isValidRecipient()) {
         throw new InvalidRecipientError();
     }
     
-    if (!$invalidMoney) {
+    if (!$this->isValidTransferAmount()) {
         throw new InvalidTransferMoneyError();
     }
     
