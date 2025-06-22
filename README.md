@@ -1,4 +1,4 @@
-# ShipSaaS NeverThrow for PHP
+# ShipSaaS - NeverThrow for PHP
 
 [![codecov](https://codecov.io/gh/shipsaas/never-throw/branch/main/graph/badge.svg?token=P1E3WP84MG)](https://codecov.io/gh/shipsaas/never-throw)
 [![Build & Test (PHP 8.1, 8.2)](https://github.com/shipsaas/never-throw/actions/workflows/build.yml/badge.svg)](https://github.com/shipsaas/never-throw/actions/workflows/build.yml)
@@ -14,7 +14,7 @@ Inspired by [NeverThrow](https://github.com/supermacro/neverthrow) so here we ar
 TL;DR: no throw = happier life & application. Fewer errors on production & increase the DRY & reusable things in your PHP apps.
 
 ## Supports
-PHP 8.2+ since v2.0.0
+PHP 8.2+
 
 ## Installation
 
@@ -24,29 +24,24 @@ composer require shipsaas/never-throw
 
 ## Top-Level API
 
-`NeverThrow\\Result` class and ready to be extended anytime.
+We provide 2 main classes:
+- `Ok`
+- `Err`
 
-### Non-static
-- `isOk()`
-- `isError()`
-- `getOkResult()`
-- `getErrorResult()`
+You can use them immediately in your code, but we recommend to create your own Success & Error classes to make it more readable and IDE-friendly.
 
 ## Usage
 
-### Create your response classes
-
-We'll create two new classes: Success & Error. And feel free to put any of your data 
+### Create your success & error data classes
 
 ```php
-use NeverThrow\SuccessResult;
-use NeverThrow\ErrorResult;
+use NeverThrow\Ok;
+use NeverThrow\Err;
 
-// Success
-class BookShipperOkResult extends SuccessResult
+class BookShipperOkData
 {
     public function __construct(
-        public string $bookingId
+        public Booking $booking
     ) {}
 }
 
@@ -57,67 +52,40 @@ enum BookingErrors {
 }
 
 // Error
-class BookShipperErrorResult extends ErrorResult
+class BookShipperErrorData
 {
     public function __construct(
-        public BookingErrors $outcome
+        public BookingErrors $code
     ) {}
-}
-```
-
-### Create your dedicated Result class
-
-Last step before using NeverThrow. Creating a dedicated Result class helps us to:
-
-- Define types for the error & success result class
-  - => IDE-friendly
-  - => Happier reader/caller
-- A centralized place that reference to the Success & Error result classes.
-
-#### First way
-```php
-use NeverThrow\Result;
-
-class BookShipperResult extends Result
-{
-    public function getOkResult(): BookShipperOkResult
-    {
-        return parent::getOkResult();
-    }
-    
-    public function getErrorResult(): BookShipperErrorResult
-    {
-        return parent::getErrorResult();
-    }
 }
 ```
 
 ### Returns the Result in your business logic
 
+
 ```php
-public function createBooking(User $user, BookingOrder $order): BookShipperResult
+/**
+ * @return ResultInterface<BookShipperOkData, BookShipperErrorData>
+ */
+public function createBooking(User $user, BookingOrder $order): ResultInterface
 {
     $hasAnyShipperAvailable = $this->shipperService->hasAnyShipperAvailable();
     if (!$hasAnyShipperAvailable) {
-        return new BookShipperResult(
-            new BookShipperErrorResult(
-                BookingErrors::NO_SHIPPER_AVAILABLE
-            )
+        new BookShipperErrorResult(
+            BookingErrors::NO_SHIPPER_AVAILABLE
         );
     }
     
     $isOverweight = !$this->weightService->isValid($order);
     if ($isOverweight) {
-        return new BookShipperResult(
-            new BookShipperErrorResult(
-                BookingErrors::OVERWEIGHT_PACKAGE
-            )
+        return new BookShipperErrorResult(
+            BookingErrors::OVERWEIGHT_PACKAGE
         );
     }
     
-    $bookingId = $this->book($user, $order);
+    $booking = $this->book($user, $order);
    
-    return new BookShipperResult(new BookShipperOkResult($bookingId));
+    return new BookShipperOkResult($booking);
 }
 ```
 
@@ -127,16 +95,18 @@ public function createBooking(User $user, BookingOrder $order): BookShipperResul
 $bookingResult = $this->service->createBooking($user, $order);
 
 if ($bookingResult->isError()) {
-    $errorResult = $bookingResult->getErrorResult();
+    $errorCode = $bookingResult->unwrapErr()->code;
 
     // handle error
-    return showError(match ($errorResult->outcome) {
+    return showError(match ($errorCode) {
         BookingErrors::NO_SHIPPER_AVAILABLE => 'No shipper available at the moment. Please wait',
         BookingErrors::OVERWEIGHT_PACKAGE => 'Your package is overweight',
     });
 }
 
-return showBooking($bookingResult->getOkResult()->bookingId);
+return showBooking([
+    'booking' => $bookingResult->unwrapOk()->booking,
+]);
 ```
 
 ## Conclusion
@@ -155,13 +125,15 @@ And we don't have to wrap the try/catch and uglify our code.
 
 Don't abuse Exceptions, they should be only used for the unexpected situations (and Errors !== Exceptions, fact).
 
-### Additional
+(Optional: Exceptions are expensive, way more expensive than a simple Error response.)
+
+### Additional notes
 
 ```php
 function transfer(): Transaction
 {
     if (!$hasEnoughBalance) {
-        thrown new InsufficientBalanceError();
+        throw new InsufficientBalanceError();
     }
     
     if (!$invalidRecipient) {
@@ -183,7 +155,7 @@ function transfer(): Transaction
 
 Most of this function is actually about the things that can go wrong, but our types only inform us of the successful path. That means 4/5ths of the function's output is **untyped**!
 
-The above "exceptions" or "errors" aren't really exceptions or errors at all. They are outcomes. They are predictable, reasonable parts of our system. My heuristic is, if they are something a good product manager would care about, they are not exceptions and you shouldn't throw them!
+The above "exceptions" or "errors" aren't really exceptions or errors at all. They are outcomes. They are predictable, reasonable parts of our system. My heuristic is, if they are something a good product manager would care about, they are not exceptions, and you shouldn't throw them!
 
 Exceptions are unpredictable things we cannot reasonably plan for, that the system should not attempt recovery from, and we should not route to the user.
 
