@@ -4,7 +4,7 @@ namespace NeverThrow;
 
 /**
  * @template T
- * @template E
+ * @template-covariant E
  */
 interface ResultInterface
 {
